@@ -1,19 +1,37 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# Starter pipeline for Terraform on Azure DevOps
 
 trigger:
-- master
+  - main  # Trigger on pushes to the main branch
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: ubuntu-latest  # Use Ubuntu agent
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+jobs:
+- job: DeployToAWS  # Define a job named "DeployToAWS"
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  steps:
+  - task: TerraformInstaller@1  # Install Terraform (version can be specified)
+    inputs:
+      terraformVersion: 'latest'  # Optional: Specify a specific Terraform version
+
+  - task: TerraformTaskV4@4  # Initialize Terraform
+    inputs:
+      provider: 'aws'  # Specify AWS provider
+      command: 'init'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/_Harshwardhan2706/myInfra2021Repo'  # Update with your working directory
+      backendAWSKey: 'main'  # Assuming this key exists in the backend
+
+  - task: TerraformTaskV4@4  # Run Terraform plan
+    inputs:
+      provider: 'aws'
+      command: 'plan'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/_Harshwardhan2706/myInfra2021Repo'
+      commandOptions: '-out dev-plan'  # Output plan to "dev-plan" file
+
+  - task: TerraformTaskV4@4  # Apply Terraform configuration (optional)
+    inputs:
+      provider: 'aws'
+      command: 'apply'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/_Harshwardhan2706/myInfra2021Repo'
+      commandOptions: '-auto-approve'  # Uncomment for auto-approval (use with caution!)
+
